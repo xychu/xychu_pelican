@@ -16,6 +16,9 @@ THEME = 'zurb-F5-basic'
 OUTPUT_PATH = '../xychu.github.io/'
 PATH = 'content'
 
+STATIC_PATHS = ['images', 'extra/CNAME']
+EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'},}
+
 TIMEZONE = 'Asia/Shanghai'
 
 DEFAULT_LANG = u'zh'
