@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 AUTHOR = u'X-Chu'
-SITENAME = u'EdgeDef: A blog'
+SITENAME = u'EdgeDef: Do Things You Cannot Do'
 SITEURL = 'http://www.edgedef.com'
 
 
@@ -25,10 +25,10 @@ DEFAULT_LANG = u'zh'
 import datetime
 td = datetime.date.today()
 DEFAULT_DATE = (td.year, td.month, td.day, 0, 0, 0)
-LOCALE = ("zh_CN")
-DATE_FORMAT = {
-        'zh': ('zh_CN', '%Y-%m-%d, %a'),
-        }
+#LOCALE = ("zh_CN")
+#DATE_FORMAT = {
+#        'zh': ('zh_CN', '%Y-%m-%d, %a'),
+#        }
 
 PLUGIN_PATH = ['pelican-plugins']
 PLUGINS = ['sitemap']
