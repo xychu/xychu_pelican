@@ -4,12 +4,10 @@ from __future__ import unicode_literals
 
 AUTHOR = u'X-Chu'
 SITENAME = u'EdgeDef: Do Things You Cannot Do'
-SITEURL = 'http://www.edgedef.com'
+SITEURL = 'http://edgedef.com'
 
 
-GITHUB_URL = "http://github.com/xychu"
-DISQUS_STIENAME = 'ethanchu'
-GOOGLE_ANALYTICS = 'UA-42668868-1'
+GITHUB_URL = "http://github.com/xychu/xychu_pelican"
 
 #THEME = 'pelican-bootstrap3'
 THEME = 'zurb-F5-basic'
