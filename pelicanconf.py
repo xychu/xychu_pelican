@@ -29,7 +29,7 @@ DEFAULT_DATE = (td.year, td.month, td.day, 0, 0, 0)
 #        }
 
 PLUGIN_PATH = ['pelican-plugins']
-PLUGINS = ['sitemap']
+PLUGINS = ['sitemap', "render_math"]
 
 SITEMAP = {
         'format': 'xml',
@@ -60,6 +60,9 @@ SOCIAL = (
     ('GitHub', 'https://github.com/xychu'),
     ('Weibo', 'http://weibo.com/learn2live'),
 )
+
+MD_EXTENSIONS = ['codehilite(css_class=highlight)', 'extra',
+                      'fenced_code', 'tables', 'sane_lists']
 
 DEFAULT_PAGINATION = 10
 
