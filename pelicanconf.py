@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*- #
 from __future__ import unicode_literals
 
-AUTHOR = u'X-Chu'
-SITENAME = u'EdgeDef: Do Things You Cannot Do'
+AUTHOR = u'xychu'
+SITENAME = u'Edge Define: To Extend'
 SITEURL = 'http://edgedef.com'
 
 
@@ -50,6 +50,8 @@ SITEMAP = {
 FEED_ALL_ATOM = None
 CATEGORY_FEED_ATOM = None
 TRANSLATION_FEED_ATOM = None
+AUTHOR_FEED_ATOM = None
+AUTHOR_FEED_RSS = None
 
 # Blogroll
 LINKS = (
