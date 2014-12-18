@@ -28,7 +28,7 @@ DEFAULT_DATE = (td.year, td.month, td.day, 0, 0, 0)
 #        'zh': ('zh_CN', '%Y-%m-%d, %a'),
 #        }
 
-PLUGIN_PATH = ['pelican-plugins']
+PLUGIN_PATHS = ['pelican-plugins']
 PLUGINS = ['sitemap', "render_math"]
 
 SITEMAP = {
