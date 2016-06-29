@@ -42,9 +42,6 @@ Summary: docker networking calico vs contiv
 
 ### Docker libnetwork Container Network Model (CNM) 阵营
 
-![CNM Model][cnm_model]
-[cnm_model]: images/cnm-model.jpg "cnm model"
-
 - Docker Swarm overlay
 - Macvlan & IP network drivers
 - Calico 
@@ -59,6 +56,7 @@ Docker libnetwork 的优势就是原生，而且和 Docker 容器生命周期结
 - Macvlan
 - Flannel
 - Calico
+- Contiv
 - Mesos CNI
 
 CNI 的优势是兼容其他容器技术(e.g. rkt)及上层编排系统(K8s & Mesos)，而且社区活跃，Kubernetes 加上 CoreOS主推；缺点是不是 Docker 原生。
@@ -94,7 +92,37 @@ Calico 节点组网可以直接利用数据中心的网络结构（无论是 L2 
 ![Calico Arch][calico_arch]
 [calico_arch]: images/calico_arch.png "calico arch"
 
-### Calico 核心概念
+结合上面这张图，我们来过一遍 Calico 的核心组件：
+
+- Felix，Calico agent，跑在每台需要运行 workload 的节点上，主要负责配置路由及 ACLs等信息来确保 endpoint 的连通状态；
+- etcd，分布式键值存储，主要负责网络元数据一致性，确保 Calico 网络状态的准确性；
+- BGP Client(BIRD), 主要负责把 Felix 写入 kernel 的路由信息分发到当前 Calico 网络，确保 workload 间的通信的有效性；
+- BGP Route Reflector(BIRD), 大规模部署时使用，摒弃所有节点互联的 mesh 模式，通过一个或者多个 BGP Route Reflector 来完成集中式的路由分发；
+
+### Calico Docker network 核心概念
+
+从这里开始我们将“站队” CNM, 通过 Calico Docker libnetwork plugin 的方式来体验和讨论 Calico 容器网络方案。
+
+先来看一下 CNM 模型：
+
+![CNM Model][cnm_model]
+[cnm_model]: images/cnm-model.jpg "cnm model"
+
+从上图可以知道，CNM 基于3个主要概念：
+
+- Sandbox，包含容器网络栈的配置，包括 interface，路由表及 DNS配置，对应的实现如：Linux Network Namespace；一个 Sandbox 可以包含多个 Network；
+- Endpoint，做为 Sandbox 接入 Network 的介质，对应的实现如：veth pair，TAP；一个 Endpoint 只能属于一个 Network，也只能属于一个 Sandbox；
+- Network，一组可以相互通信的 Endpoints；对应的实现如：Linux bridge，VLAN；Network 有大量 Endpoint 资源组成；
+
+除此之外，CNM 还需要依赖另外两个关键的对象来完成 Docker 的网络管理功能，他们分别是：
+
+- NetworkController, 对外提供分配及管理网络的 APIs，Docker libnetwork 支持多个活动的网络 driver，NetworkController 允许绑定特定的 driver 到指定的网络；
+- Driver，网络驱动对用户而言是不直接交互的，它通过插件式的接入来提供最终网络功能的实现；Driver(包括 IPAM) 负责一个 network 的管理，包括资源分配和回收；
+
+有了这些关键的概念和对象，配合 Docker 的生命周期，通过 APIs 就能完成管理容器网络的功能，具体的步骤和实现细节这里不展开讨论了，
+有兴趣的可以移步 Github： https://github.com/docker/libnetwork/blob/master/docs/design.md。
+
+
 
 Pool
 Profile
