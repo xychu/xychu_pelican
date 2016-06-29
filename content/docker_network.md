@@ -64,7 +64,7 @@ Docker libnetwork 的优势就是原生，而且和 Docker 容器生命周期结
 CNI 的优势是兼容其他容器技术(e.g. rkt)及上层编排系统(K8s & Mesos)，而且社区活跃，Kubernetes 加上 CoreOS主推；缺点是不是 Docker 原生。
 
 而且从上的也可以看出，有一些第三方的网络方案是“脚踏两只船”的，
-我个人认为目前这个状态下也是合情理的事儿，但是存在风险的, 或者被淘汰，或者被收购。
+我个人认为目前这个状态下也是合情理的事儿，但是长期来看是存在风险的, 或者被淘汰，或者被收购。
 
 
 # Calico
@@ -75,9 +75,19 @@ Calico 是一个纯3层的数据中心网络方案，而且无缝集成像 OpenS
 
 通过将整个互联网的可扩展 IP 网络原则压缩到数据中心级别，Calico 在每一个计算节点利用 Linux kernel 实现了一个高效的 vRouter 来负责数据转发，而每个 vRouter 通过 BGP 协议负责把自己上运行的 workload 的路由信息像整个 Calico 网络内传播 － 小规模部署可以直接互联，大规模下可通过指定的 BGP route reflector来完成。
 
+这样保证最终所有的 workload 之间的数据流量都是通过 IP 路由的方式完成互联的。
+
+![Calico ip-hops][calico_ip_hops]
+[calico_ip_hops]: images/calico-ip-hops.png "calico ip hops"
+
 Calico 节点组网可以直接利用数据中心的网络结构（无论是 L2 或者 L3），不需要额外的 NAT，隧道或者 overlay network。
 
-Calico 还支持丰富而灵活的网络 policy, 保证通过各个节点上的 ACLs 来提供 workload 的多租户隔离，安全组以及其他可达性限制等功能。
+![Calico no-encap][calico_no_encap]
+[calico_no_encap]: images/calico-no-encap.png "calico no encap"
+
+如上图所示，这样保证这个方案的简单可控，而且没有封包解包，节约 CPU 计算资源的同时，提高了整个网络的性能。
+
+此外，Calico 基于 iptables 还提供了丰富而灵活的网络 policy, 保证通过各个节点上的 ACLs 来提供 workload 的多租户隔离、安全组以及其他可达性限制等功能。
 
 ### Calico 架构
 
@@ -92,7 +102,7 @@ Rule & tag
 
 ### Demo
 
-基于上面的架构及核心概念，我们先看一个简单的例子，直观的感受下 Calico 的网络管理方案。
+基于上面的架构及核心概念，我们先看一个简单的例子，直观的感受下 Calico 的网络管理。
 
 ### 数据层 & 控制层
 
@@ -105,7 +115,7 @@ Rule & tag
 ### 安全策略 ACL
 
 
-# Contiv
+# Contiv, OpenSourced by Cisco
 
 Policy Based Networking and Storage for Containers
 
@@ -115,7 +125,7 @@ Contiv works with major container schedulers like Docker Swarm, Kubernetes, and 
 
 Contiv provides IP address per container and eliminates the need for host-based port NAT. It works with different kinds of networks like pure layer 3 networks, overlay networks, and layer 2 networks, and it provides the same virtual network view to containers regardless of the underlying technology.
 
-### 特性
+### Contiv 特性
 
 - Multi-tenant environment where disjoint networks are offered to containers on the same host
 - SDN applications and interoperability with SDN solutions
