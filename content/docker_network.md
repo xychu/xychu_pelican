@@ -9,7 +9,14 @@ Summary: docker networking calico vs contiv
 
 # 摘要
 
-(如果需要，可以添加一些背景需求）
+随着容器的火热发展，大家对容器的网络特性要求也开始越来越高，比如：
+
+- 一容器一IP
+- 多主机网络
+- 网络隔离
+- ACL
+- 对接 SDN 等等
+
 这次主要跟大家聊聊 Docker 的网络方案，主要包括现有容器网络方案介绍，
 接下来重点讲解 Calico 的特性及技术点，作为引申和对比再介绍下 Contiv 的特性,
 最后给出对比测试结果。
@@ -120,13 +127,13 @@ Calico 节点组网可以直接利用数据中心的网络结构（无论是 L2 
 - Driver，网络驱动对用户而言是不直接交互的，它通过插件式的接入来提供最终网络功能的实现；Driver(包括 IPAM) 负责一个 network 的管理，包括资源分配和回收；
 
 有了这些关键的概念和对象，配合 Docker 的生命周期，通过 APIs 就能完成管理容器网络的功能，具体的步骤和实现细节这里不展开讨论了，
-有兴趣的可以移步 Github： https://github.com/docker/libnetwork/blob/master/docs/design.md。
+有兴趣的可以移步 Github： https://github.com/docker/libnetwork/blob/master/docs/design.md
 
+接下来再介绍两个 Calico 的概念：
 
+#### Pool
 
-Pool
-Profile
-Rule & tag
+#### Profile
 
 ### Demo
 
@@ -147,8 +154,7 @@ Rule & tag
 
 http://contiv.github.io
 
-Contiv 是 Cisco 开源出来的针对容器的基础架构，主要功能是提供基于 Policy 的网络和存储管理。
-A new kind of infrastructure for microservices.
+Contiv 是 Cisco 开源出来的针对容器的基础架构，主要功能是提供基于 Policy 的网络和存储管理，是面向微服务的一种新基架。
 
 Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kubernetes, Mesos and Nomad。
 
@@ -160,17 +166,16 @@ Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kuber
 
 ### Contiv netplugin 特性
 
-- Multi-tenant environment where disjoint networks are offered to containers on the same host
-- SDN applications and interoperability with SDN solutions
-- Interoperability with non container environment and hand-off to a physical network
-- Instantiating policies/ACL/QoS associated with containers
-- Multicast or multi-destination dependent applications
-- Integration with existing IPAM tools for migrating customers
-- Handle NIC's capabilities for acceleration (SRIOV/Offload/etc.)
+- 多租户网络混部在同一台主机上
+- 集成现有 SDN 方案
+- 能够和非容器环境兼容协作，不依赖物理网络具体细节
+- 即时生效的容器网络 policy/ACL/QoS 规则
 
 # 性能对比测试
 
 最后附上我们使用 qperf 做的简单性能测试结果，我们选取了 vm-to-vm, host, calico-bgp, calico-ipip 以及 swarm overlay 进行了对比。
+
+测试环境：VirtualBox VMs，OS：Centos 7.2，kernel 3.10，1 vCPU，1G Mem。
 
 带宽对比结果如下：
 
