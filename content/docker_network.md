@@ -42,14 +42,15 @@ Summary: docker networking calico vs contiv
 
 ### Docker libnetwork Container Network Model (CNM) 阵营
 
-(CNM 图)
+![CNM Model][cnm_model]
+[cnm_model]: images/cnm-model.jpg "cnm model"
 
 - Docker Swarm overlay
 - Macvlan & IP network drivers
-- Calico
+- Calico 
 - Contiv (from Cisco)
 
-Docker libnetwork 的优势就是原生，而且和容器生命周期结合紧密；缺点也是原生，被 Docker “绑架”。
+Docker libnetwork 的优势就是原生，而且和 Docker 容器生命周期结合紧密；缺点也也可以理解为是原生，被 Docker “绑架”。
 
 ### Container Network Interface (CNI) 阵营
 
@@ -58,8 +59,9 @@ Docker libnetwork 的优势就是原生，而且和容器生命周期结合紧�
 - Macvlan
 - Flannel
 - Calico
+- Mesos CNI
 
-CNI 的优势是社区活跃，Kubernetes 加上 CoreOS主推，而且兼容其他容器技术，比如 rkt；缺点是不是 Docker 原生。
+CNI 的优势是兼容其他容器技术(e.g. rkt)及上层编排系统(K8s & Mesos)，而且社区活跃，Kubernetes 加上 CoreOS主推；缺点是不是 Docker 原生。
 
 而且从上的也可以看出，有一些第三方的网络方案是“脚踏两只船”的，
 我个人认为目前这个状态下也是合情理的事儿，但是存在风险的, 或者被淘汰，或者被收购。
@@ -77,14 +79,30 @@ Calico 节点组网可以直接利用数据中心的网络结构（无论是 L2 
 
 Calico 还支持丰富而灵活的网络 policy, 保证通过各个节点上的 ACLs 来提供 workload 的多租户隔离，安全组以及其他可达性限制等功能。
 
+### Calico 架构
+
+![Calico Arch][calico_arch]
+[calico_arch]: images/calico_arch.png "calico arch"
+
+### Calico 核心概念
+
+Pool
+Profile
+Rule & tag
+
+### Demo
+
+基于上面的架构及核心概念，我们先看一个简单的例子，直观的感受下 Calico 的网络管理方案。
 
 ### 数据层 & 控制层
 
+![Calico data plane 1][calico_data_plane_1]
+[calico_data_plane_1]: images/calico_data_plane_1.png "calico data plane 1"
+
+![Calico data plane 2][calico_data_plane_2]
+[calico_data_plane_2]: images/calico_data_plane_2.png "calico data plane 2"
 
 ### 安全策略 ACL
-
-
-### Demo
 
 
 # Contiv
