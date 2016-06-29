@@ -115,17 +115,22 @@ Rule & tag
 ### 安全策略 ACL
 
 
-# Contiv, OpenSourced by Cisco
+# Contiv
 
-Policy Based Networking and Storage for Containers
+http://contiv.github.io
 
+Contiv 是 Cisco 开源出来的针对容器的基础架构，主要功能是提供基于 Policy 的网络和存储管理。
 A new kind of infrastructure for microservices.
 
-Contiv works with major container schedulers like Docker Swarm, Kubernetes, and Mesos.
+Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kubernetes, Mesos and Nomad。
 
-Contiv provides IP address per container and eliminates the need for host-based port NAT. It works with different kinds of networks like pure layer 3 networks, overlay networks, and layer 2 networks, and it provides the same virtual network view to containers regardless of the underlying technology.
+![Contiv net][contiv_net]
+[contiv_net]: images/contiv_net.png "contiv net"
 
-### Contiv 特性
+如上图所示，Contiv 比较“诱人”的一点就是，它的网络管理能力，既有L2(vlan)、L3(BGP), 又有 Overlay(VxLAN), 
+而且还能对接 Cisco 的 SDN 产品 ACI。可以说有了它就可以无视底层的网络基础架构，向上层容器提供一致的虚拟网络了。
+
+### Contiv netplugin 特性
 
 - Multi-tenant environment where disjoint networks are offered to containers on the same host
 - SDN applications and interoperability with SDN solutions
@@ -137,4 +142,24 @@ Contiv provides IP address per container and eliminates the need for host-based 
 
 # 性能对比测试
 
+最后附上我们使用 qperf 做的简单性能测试结果，我们选取了 vm-to-vm, host, calico-bgp, calico-ipip 以及 swarm overlay 进行了对比。
 
+带宽对比结果如下：
+
+![bw][bw]
+[bw]: images/bw.png "bandwidth compare"
+
+时延对比结果如下：
+
+![lat][lat]
+[lat]: images/lat.png "latency compare"
+
+qperf 命令：
+
+    # server 端
+    $ qperf
+    # client 端
+    # 持续10s发送64k数据包，tcp_bw表示带宽，tcp_lat表示延迟
+    $ qperf -m 64K -t 10 192.168.2.10 tcp_bw tcp_lat; client端，持续10s发送64k数据包，tcp_bw表示带宽，tcp_lat表示延迟
+    # 从1开始指数递增数据包大小
+    $ qperf -oo msg_size:1:64k:*2 192.168.2.10 tcp_bw tcp_lat； client端，从1开始指数递增数据包大小
