@@ -132,7 +132,7 @@ Calico 节点组网可以直接利用数据中心的网络结构（无论是 L2 
 接下来再介绍两个 Calico 的概念：
 
 - Pool, 定义可用于 Docker Network 的 IP 资源范围，比如：10.0.0.0/8 或者 192.168.0.0/16；
-- Profile，定义 Docker network Policy 的集合，由 tags 和 rules 组成；
+- Profile，定义 Docker network Policy 的集合，由 tags 和 rules 组成；每个 Profile 默认拥有一个和 Profile 名字相同的 Tag，每个 Profile 可以有多个 Tag，以 List 形式保存;
 
 Profile 样例：
 
@@ -167,16 +167,67 @@ calicoctl profile show 截图：
 ![Calico profile][calico_profile]
 [calico_profile]: images/calico_profile.png "calico profile"
 
-### 数据层 & 控制层
+下面我们使用 dataman 这个网络，在两台 slave 机器上各启动一个容器：
+
+Marathon json file:
+
+    {
+      "id": "/nginx-calico",
+      "cmd": null,
+      "cpus": 0.1,
+      "mem": 64,
+      "disk": 0,
+      "instances": 2,
+      "container": {
+        "type": "DOCKER",
+        "volumes": [],
+        "docker": {
+          "image": "nginx",
+          "network": "HOST",
+          "privileged": false,
+          "parameters": [
+            {
+              "key": "net",
+              "value": "dataman"
+            }
+          ],
+          "forcePullImage": false
+        }
+      },
+      "portDefinitions": [
+        {
+          "port": 10000,
+          "protocol": "tcp",
+          "labels": {}
+        }
+      ]
+    }
+
+两台 slave 容器 IP 截图：
+![slave ip 1][slave_ip_1]
+[slave_ip_1]: images/ip_slave_1.png "ip slave 1"
+![slave ip 2][slave_ip_2]
+[slave_ip_2]: images/ip_slave_2.png "ip slave 2"
+
+### IP 路由实现 
 
 ![Calico data plane 1][calico_data_plane_1]
 [calico_data_plane_1]: images/calico_data_plane_1.png "calico data plane 1"
 
-![Calico data plane 2][calico_data_plane_2]
-[calico_data_plane_2]: images/calico_data_plane_2.png "calico data plane 2"
+根据上面这个 Calico 数据平面概念图，结合我们的例子，我们来看看 Calico 是如何实现跨主机互通的：
+
+两台 slave route 截图：
+![slave route 1][slave_route_1]
+[slave_route_1]: images/route_slave_1.png "route slave 1"
+![slave route 2][slave_route_2]
+[slave_route_2]: images/route_slave_2.png "route slave 2"
+
+
 
 ### 安全策略 ACL
 
+![Calico data plane 2][calico_data_plane_2]
+[calico_data_plane_2]: images/calico_data_plane_2.png "calico data plane 2"
 
 # Contiv
 
