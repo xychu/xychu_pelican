@@ -17,7 +17,7 @@ Summary: docker networking calico vs contiv
 - ACL
 - 对接 SDN 等等
 
-这次主要跟大家聊聊 Docker 的网络方案，主要包括现有容器网络方案介绍，
+这次主要跟大家聊聊 Docker 的网络方案，首先是现有容器网络方案介绍，
 接下来重点讲解 Calico 的特性及技术点，作为引申和对比再介绍下 Contiv 的特性,
 最后给出对比测试结果。
 
@@ -131,13 +131,41 @@ Calico 节点组网可以直接利用数据中心的网络结构（无论是 L2 
 
 接下来再介绍两个 Calico 的概念：
 
-#### Pool
+- Pool, 定义可用于 Docker Network 的 IP 资源范围，比如：10.0.0.0/8 或者 192.168.0.0/16；
+- Profile，定义 Docker network Policy 的集合，由 tags 和 rules 组成；
 
-#### Profile
+Profile 样例：
+
+    Inbound rules:
+      1 allow from tag WEB 
+      2 allow tcp to ports 80,443
+    Outbound rules:
+      1 allow
 
 ### Demo
 
-基于上面的架构及核心概念，我们先看一个简单的例子，直观的感受下 Calico 的网络管理。
+基于上面的架构及核心概念，我们通过一个简单的例子，直观的感受下 Calico 的网络管理。
+
+Calico 以测试为目的集群搭建，步骤很简单，这里不展示了，
+大家可以直接参考 Github：https://github.com/projectcalico/calico-containers/blob/master/docs/calico-with-docker/docker-network-plugin/README.md
+
+这里默认已经有了 Calico 网络的集群，
+
+calicoctl status 截图：
+![Calico status][calico_status]
+[calico_status]: images/calico_status.png "calico status"
+
+calicoctl pool show 截图：
+![Calico pool][calico_pool]
+[calico_pool]: images/calico_pool_show.png "calico pool"
+
+docker network ls 截图：
+![Docker network][docker_network]
+[docker_network]: images/docker_network.png "docker network"
+
+calicoctl profile show 截图：
+![Calico profile][calico_profile]
+[calico_profile]: images/calico_profile.png "calico profile"
 
 ### 数据层 & 控制层
 
