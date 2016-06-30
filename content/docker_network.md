@@ -45,7 +45,7 @@ Summary: docker networking calico vs contiv
 
 路由方案一般是从 3 层或者 2 层实现隔离和跨主机容器互通的，出了问题也很容易排查。
 
-我觉得以后再讨论容器网络方案，不仅要看实现方式，而且还要看网络模型的“站队”，比如说你到底是要用 Docker 原生的 “CNM”，还是CoreOS，谷歌主推的 “CNI”。
+我觉得 Docker 1.9 以后再讨论容器网络方案，不仅要看实现方式，而且还要看网络模型的“站队”，比如说你到底是要用 Docker 原生的 “CNM”，还是CoreOS，谷歌主推的 “CNI”。
 
 ### Docker libnetwork Container Network Model (CNM) 阵营
 
@@ -250,7 +250,7 @@ Slave 容器连通性测试截图：
 
 Calico 的 ACLs Profile 主要依靠 iptables 和 ipset 来完成，提供的是可针对每个容器级别的规则定义。
 
-具体的实现我们可以通过 iptables 命令查看对应的 chain 规则, 这里我们就不展开讨论了。
+具体的实现我们可以通过 iptables 命令查看对应的 chain 和 filter 规则, 这里我们就不展开讨论了。
 
 
 # Contiv
