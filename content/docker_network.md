@@ -149,15 +149,19 @@ Profile 样例：
 Calico 以测试为目的集群搭建，步骤很简单，这里不展示了，
 大家可以直接参考 Github：https://github.com/projectcalico/calico-containers/blob/master/docs/calico-with-docker/docker-network-plugin/README.md
 
-这里默认已经有了 Calico 网络的集群，
+这里默认已经有了 Calico 网络的集群，IP 分别是：192.168.99.102 和 192.168.99.103
 
 calicoctl status 截图：
 ![Calico status][calico_status]
 [calico_status]: images/calico_status.png "calico status"
 
+同时，已经有两个 IP Pool 创建好，分别是：10.0.0.0/26 和 192.168.0.0/16
+
 calicoctl pool show 截图：
 ![Calico pool][calico_pool]
 [calico_pool]: images/calico_pool_show.png "calico pool"
+
+当前集群也已经通过使用 calico driver 和 IPAM 创建了不同的 docker network，本次 demo 只需要使用 dataman
 
 docker network ls 截图：
 ![Docker network][docker_network]
@@ -209,6 +213,14 @@ Marathon json file:
 ![slave ip 2][slave_ip_2]
 [slave_ip_2]: images/ip_slave_2.png "ip slave 2"
 
+从上图可以看出，两个 slave 上的容器 IP 分别是：slave 10.0.0.48, slave2 192.168.115.193
+
+连通性测试截图：
+![ip connect 1][ip_connect_1]
+[ip_connect_1]: images/ip_connect_1.png "ip connect 1"
+![ip connect 2][ip_connect_2]
+[ip_connect_2]: images/ip_connect_2.png "ip connect 2"
+
 ### IP 路由实现 
 
 ![Calico data plane 1][calico_data_plane_1]
@@ -228,6 +240,7 @@ Marathon json file:
     container -> slave 1 -> route -> slave 2 -> container
 
 这样，跨主机的容期间通信就建立起来了，而且整个数据流中没有 NAT、隧道，不涉及封包。
+
 
 ### 安全策略 ACL
 
