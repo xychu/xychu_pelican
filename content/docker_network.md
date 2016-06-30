@@ -9,7 +9,7 @@ Summary: docker networking calico vs contiv
 
 # 摘要
 
-随着容器的火热发展，大家对容器的网络特性要求也开始越来越高，比如：
+随着容器的火热发展，数人云 越来越多的客户容器的网络特性要求也开始越来越高，比如：
 
 - 一容器一IP
 - 多主机容器互联
@@ -173,7 +173,7 @@ calicoctl profile show 截图：
 
 下面我们使用 dataman 这个网络，在两台 slave 机器上各启动一个容器：
 
-Marathon json file:
+数人云 下发容器的 Marathon json file:
 
     {
       "id": "/nginx-calico",
@@ -274,9 +274,12 @@ Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kuber
 - 能够和非容器环境兼容协作，不依赖物理网络具体细节
 - 即时生效的容器网络 policy/ACL/QoS 规则
 
-# 性能对比测试
+# 网络方案性能对比测试
 
 最后附上我们使用 qperf 做的简单性能测试结果，我们选取了 vm-to-vm, host, calico-bgp, calico-ipip 以及 swarm overlay 进行了对比。
+
+其实 Contiv 也测试了，但是因为 Contiv 的测试环境和其他方案使用的不同，不具有直接可比性，所以没有放入对比图里。 
+直观感受就是基于 OVS 的方案确实不理想，后面有时间会统一环境继续进行测试对比，包括 Contiv 的 L3/L2方案以及引入 MacVLAN、flannel 等。
 
 测试环境：VirtualBox VMs，OS：Centos 7.2，kernel 3.10，2 vCPU，2G Mem。
 
@@ -296,6 +299,18 @@ qperf 命令：
     $ qperf
     # client 端
     # 持续 10s 发送 64k 数据包，tcp_bw 表示带宽，tcp_lat 表示延迟
-    $ qperf -m 64K -t 10 192.168.2.10 tcp_bw tcp_lat; client端，持续10s发送64k数据包，tcp_bw表示带宽，tcp_lat表示延迟
-    # 从1开始指数递增数据包大小
-    $ qperf -oo msg_size:1:64k:*2 192.168.2.10 tcp_bw tcp_lat； client端，从1开始指数递增数据包大小
+    $ qperf -m 64K -t 10 192.168.2.10 tcp_bw tcp_lat
+    # 从 1 开始指数递增数据包大小
+    $ qperf -oo msg_size:1:64k:*2 192.168.2.10 tcp_bw tcp_lat
+
+
+# 总结
+
+随着容器的落地，网络方案必将成为“兵家”必争之地，我们 数人云 是做容器集群管理云平台的，在网络方案选择上的考虑是：
+
+- 性能，Calico 和 MacVLAN 都有着不错的表现；Contiv L3(BGP) 理论上性能也不会差；
+- 普适性，Calico 对底层的基本要求就是 IP 层可达；MacVLAN 不适应于公有云；Contiv 对底层的兼容性可能更好；
+- 可编程性，保证整个网络管理过程能够程序化、API 化，这样方便集成到产品里，不需要手动运维；Calico 和 Contiv 都有相应的模块；
+- 未来发展，这个就是我说的“站队”，Docker 的 CNM 和 CoreOS、K8S 的 CNI，现在还看不清，Calico 和 Contiv 都是支持的;
+
+综上，个人推荐关注和尝试下 Calico 或者 Contiv 做为容器的网络方案，有问题或者收获，欢迎随时交流分享。
