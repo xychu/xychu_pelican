@@ -12,7 +12,7 @@ Summary: docker networking calico vs contiv
 随着容器的火热发展，大家对容器的网络特性要求也开始越来越高，比如：
 
 - 一容器一IP
-- 多主机网络
+- 多主机容器互联
 - 网络隔离
 - ACL
 - 对接 SDN 等等
@@ -45,7 +45,7 @@ Summary: docker networking calico vs contiv
 
 路由方案一般是从 3 层或者 2 层实现隔离和跨主机容器互通的，出了问题也很容易排查。
 
-我觉得以后再讨论容器网络方案，不仅要看实现方式，而且还要看网络模型的“站队”，比如说你到底是要用 Docker 原生的 “CNM”，还是谷歌, CoreOS 主推的 “CNI”。
+我觉得以后再讨论容器网络方案，不仅要看实现方式，而且还要看网络模型的“站队”，比如说你到底是要用 Docker 原生的 “CNM”，还是CoreOS，谷歌主推的 “CNI”。
 
 ### Docker libnetwork Container Network Model (CNM) 阵营
 
@@ -54,7 +54,7 @@ Summary: docker networking calico vs contiv
 - Calico 
 - Contiv (from Cisco)
 
-Docker libnetwork 的优势就是原生，而且和 Docker 容器生命周期结合紧密；缺点也也可以理解为是原生，被 Docker “绑架”。
+Docker libnetwork 的优势就是原生，而且和 Docker 容器生命周期结合紧密；缺点也可以理解为是原生，被 Docker “绑架”。
 
 ### Container Network Interface (CNI) 阵营
 
@@ -66,7 +66,7 @@ Docker libnetwork 的优势就是原生，而且和 Docker 容器生命周期结
 - Contiv
 - Mesos CNI
 
-CNI 的优势是兼容其他容器技术(e.g. rkt)及上层编排系统(K8s & Mesos)，而且社区活跃，Kubernetes 加上 CoreOS主推；缺点是不是 Docker 原生。
+CNI 的优势是兼容其他容器技术(e.g. rkt)及上层编排系统(K8s & Mesos)，而且社区活跃势头迅猛，Kubernetes 加上 CoreOS 主推；缺点是非 Docker 原生。
 
 而且从上的也可以看出，有一些第三方的网络方案是“脚踏两只船”的，
 我个人认为目前这个状态下也是合情理的事儿，但是长期来看是存在风险的, 或者被淘汰，或者被收购。
@@ -78,7 +78,7 @@ CNI 的优势是兼容其他容器技术(e.g. rkt)及上层编排系统(K8s & Me
 
 Calico 是一个纯3层的数据中心网络方案，而且无缝集成像 OpenStack 这种 IaaS 云架构，能够提供可控的 VM、容器、裸机之间的 IP 通信。
 
-通过将整个互联网的可扩展 IP 网络原则压缩到数据中心级别，Calico 在每一个计算节点利用 Linux kernel 实现了一个高效的 vRouter 来负责数据转发，而每个 vRouter 通过 BGP 协议负责把自己上运行的 workload 的路由信息像整个 Calico 网络内传播 － 小规模部署可以直接互联，大规模下可通过指定的 BGP route reflector来完成。
+通过将整个互联网的可扩展 IP 网络原则压缩到数据中心级别，Calico 在每一个计算节点利用 Linux kernel 实现了一个高效的 vRouter 来负责数据转发，而每个 vRouter 通过 BGP 协议负责把自己上运行的 workload 的路由信息像整个 Calico 网络内传播 － 小规模部署可以直接互联，大规模下可通过指定的 BGP route reflector 来完成。
 
 这样保证最终所有的 workload 之间的数据流量都是通过 IP 路由的方式完成互联的。
 
@@ -101,7 +101,7 @@ Calico 节点组网可以直接利用数据中心的网络结构（无论是 L2 
 
 结合上面这张图，我们来过一遍 Calico 的核心组件：
 
-- Felix，Calico agent，跑在每台需要运行 workload 的节点上，主要负责配置路由及 ACLs等信息来确保 endpoint 的连通状态；
+- Felix，Calico agent，跑在每台需要运行 workload 的节点上，主要负责配置路由及 ACLs 等信息来确保 endpoint 的连通状态；
 - etcd，分布式键值存储，主要负责网络元数据一致性，确保 Calico 网络状态的准确性；
 - BGP Client(BIRD), 主要负责把 Felix 写入 kernel 的路由信息分发到当前 Calico 网络，确保 workload 间的通信的有效性；
 - BGP Route Reflector(BIRD), 大规模部署时使用，摒弃所有节点互联的 mesh 模式，通过一个或者多个 BGP Route Reflector 来完成集中式的路由分发；
@@ -265,7 +265,7 @@ Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kuber
 [contiv_net]: images/contiv_net.png "contiv net"
 
 如上图所示，Contiv 比较“诱人”的一点就是，它的网络管理能力，既有L2(vlan)、L3(BGP), 又有 Overlay(VxLAN), 
-而且还能对接 Cisco 的 SDN 产品 ACI。可以说有了它就可以无视底层的网络基础架构，向上层容器提供一致的虚拟网络了。
+而且还能对接 Cisco 自家的 SDN 产品 ACI。可以说有了它就可以无视底层的网络基础架构，向上层容器提供一致的虚拟网络了。
 
 ### Contiv netplugin 特性
 
@@ -278,7 +278,7 @@ Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kuber
 
 最后附上我们使用 qperf 做的简单性能测试结果，我们选取了 vm-to-vm, host, calico-bgp, calico-ipip 以及 swarm overlay 进行了对比。
 
-测试环境：VirtualBox VMs，OS：Centos 7.2，kernel 3.10，1 vCPU，1G Mem。
+测试环境：VirtualBox VMs，OS：Centos 7.2，kernel 3.10，2 vCPU，2G Mem。
 
 带宽对比结果如下：
 
@@ -295,7 +295,7 @@ qperf 命令：
     # server 端
     $ qperf
     # client 端
-    # 持续10s发送64k数据包，tcp_bw表示带宽，tcp_lat表示延迟
+    # 持续 10s 发送 64k 数据包，tcp_bw 表示带宽，tcp_lat 表示延迟
     $ qperf -m 64K -t 10 192.168.2.10 tcp_bw tcp_lat; client端，持续10s发送64k数据包，tcp_bw表示带宽，tcp_lat表示延迟
     # 从1开始指数递增数据包大小
     $ qperf -oo msg_size:1:64k:*2 192.168.2.10 tcp_bw tcp_lat； client端，从1开始指数递增数据包大小
