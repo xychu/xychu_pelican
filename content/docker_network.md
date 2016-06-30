@@ -215,7 +215,8 @@ Marathon json file:
 
 从上图可以看出，两个 slave 上的容器 IP 分别是：slave 10.0.0.48, slave2 192.168.115.193
 
-连通性测试截图：
+Slave 容器连通性测试截图：
+
 ![ip connect 1][ip_connect_1]
 [ip_connect_1]: images/ip_connect_1.png "ip connect 1"
 ![ip connect 2][ip_connect_2]
@@ -237,7 +238,7 @@ Marathon json file:
 对照两台 slave 的路由表，我们就知道，如果 slave 1 上的容器(10.0.0.48)想要发送数据到 slave 2 上的容器(192.168.115.193)，
 那它就会 match 到最后一条路由规则，将数据包转发给 slave 2(192.168.99.103)，那整个数据流就是：
 
-    container -> slave 1 -> route -> slave 2 -> container
+    container -> kernel -> (cali2f0e)slave 1 -> one or more hops -> (192.168.99.103)slave 2 -> kernel -> (cali7d73)container
 
 这样，跨主机的容期间通信就建立起来了，而且整个数据流中没有 NAT、隧道，不涉及封包。
 
