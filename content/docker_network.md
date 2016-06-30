@@ -248,8 +248,10 @@ Slave 容器连通性测试截图：
 ![Calico data plane 2][calico_data_plane_2]
 [calico_data_plane_2]: images/calico_data_plane_2.png "calico data plane 2"
 
-Calico 的 ACLs Profile 主要依靠 iptables 和 ipset 来完成，规则定义上面已经给过简单示例，这里就不多讲了，
-有兴趣的化，可以通过 iptables 命令查看具体的实现。
+Calico 的 ACLs Profile 主要依靠 iptables 和 ipset 来完成，提供的是可针对每个容器级别的规则定义。
+
+具体的实现我们可以通过 iptables 命令查看对应的 chain 规则, 这里我们就不展开讨论了。
+
 
 # Contiv
 
