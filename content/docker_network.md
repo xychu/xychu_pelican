@@ -23,7 +23,7 @@ Summary: docker networking calico vs contiv
 
 # 现有的主要 Docker 网络方案
 
-首先简单介绍下现有的容器网络方案，网上也看了好多对比，大家之前都是基于实现方式来分，
+首先简单介绍下现有的容器网络方案，网上也看了好多对比，大家之前都是基于实现方式来分[1]，
 
 ### 隧道方案
 
@@ -314,3 +314,6 @@ qperf 命令：
 - 未来发展，这个就是我说的“站队”，Docker 的 CNM 和 CoreOS、K8S 的 CNI，现在还看不清，Calico 和 Contiv 都是支持的;
 
 综上，个人推荐关注和尝试下 Calico 或者 Contiv 做为容器的网络方案，有问题或者收获，欢迎随时交流分享。
+
+
+[1]: http://dockone.io/article/355 "DockOne技术分享（二）：集群规模下日志处理和网络方案"
