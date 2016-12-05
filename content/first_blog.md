@@ -1,7 +1,7 @@
 Title: My first post
 Date: 2014-05-08
 Category: others
-Tag: pelican
+Tags: pelican
 Slug: my-first-post
 Author: X-Chu
 Summary: First Post
