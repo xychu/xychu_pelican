@@ -53,7 +53,7 @@ Calico 节点组网可以直接利用数据中心的网络结构（支持 L2 或
 Container Network Interface [CNI](https://github.com/containernetworking/cni) 容器网络 spec 是由 CoreOS 提出的，被 Mesos， Kubernetes 以及 rkt 等接受引入
 使用。
 
-Calico 在对 Docker 对 CNM 和 libnetwork 提供更好的支持的同时，为了更亲和 Kubernetes 和 Mesos 等容器管理平台，也在积极的努力，所以不但有对 CNI 的支持，而且还和 CoreOS 一起组建了
+Calico 在对 Docker 家的 CNM 和 libnetwork 提供更好的支持的同时，为了更亲和 Kubernetes 和 Mesos 等容器管理平台，也在积极的努力，所以不但有对 CNI 的支持，而且还和 CoreOS 一起组建了
 新的公司 TiGERA（https://www.tigera.io/），主推 [Canal](https://github.com/tigera/canal) 将 Calico 的 policy 功能加入到 [Flannel](https://github.com/coreos/flannel) 的网络中，为和 k8s 的网络提供更好的 ACL 控制。
 
 # Calico 的新版变化
@@ -96,7 +96,7 @@ v1.5.0
 - libnetwork-plugin (Docker libnetwork plugin for Project Calico, integrated with the `calico/node` image)
 - networking-calico （OpenStack/Neutron integration for Calico networking）
 
-总结来看，就是语言栈转向 Golang，同时面向使用者提供更好的扩展性和集成能力。
+总结来看，就是组件语言栈转向 Golang，包括原来 Python 的 `calicoctl` 也用 Golang 重写了；同时面向使用者提供更好的扩展性和集成能力。
 
 ### 使用层面
 
@@ -104,7 +104,7 @@ v1.5.0
 
 - http://docs.projectcalico.org/v2.0/introduction/
 
-开源软件的文档对于使用者来说很重要，Calico 的文档正在变的越来越好，尽量保证每种使用场景都能找到可用的参考。
+开源软件的文档对于使用者来说很重要，Calico 的文档正在变的越来越好，尽量保证每种使用场景（docker，Mesos, CoreOS, K8s, OpenStack 等) 都能找到可用的参考。
 
 除此之外，Calico 还维护了一个很快响应的 [Slack](https://slack.projectcalico.org/)，有问题可以随时到里边提问，这种交互对开源的使用者来说也是很好的体验。
 
@@ -115,87 +115,84 @@ v1.5.0
 具体的 Calico 定义资源模型的例子在后面的 Demo 中会有体现。
 
 
-### Calico 组件原理 Demo
+# Calico 组件原理 Demo
 
-基于上面的架构及核心概念，我们通过一个简单的例子，直观的感受下 Calico 的网络管理。
+为了理解 Calico 工作原理，顺便体验新版 Calico，我们准备了两套 Demo 环境，一套是新版 Calico，另一套是对比环境 MacVlan。
 
-Calico 以测试为目的集群搭建，步骤很简单，这里不展示了，
-大家可以直接参考 Github：https://github.com/projectcalico/calico-containers/blob/master/docs/calico-with-docker/docker-network-plugin/README.md
+Calico 以测试为目的集群搭建，步骤很简单，这里不展开了，
+大家可以直接参考 http://docs.projectcalico.org/master/getting-started/docker/installation/manual
 
-这里默认已经有了 Calico 网络的集群，IP 分别是：192.168.99.102 和 192.168.99.103
+MacVlan 的集群搭建，步骤也相对简单,
+参考：https://github.com/alfredhuang211/study-docker-doc/blob/master/docker%E8%B7%A8%E4%B8%BB%E6%9C%BAmacvlan%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.md
 
-calicoctl status 截图：
+这里默认已经有了两套 Docker Demo 集群：
+- Calico 网络的集群，分别是：10.1.1.103(calico01) 和 10.1.1.104(calico02)
+- MacVlan 集群，分别是：10.1.1.105 和 10.1.1.106
+
+### Demo 1: Calico 三层互联
+
+calicoctl node status 截图：
 ![Calico status][calico_status]
-[calico_status]: images/calico_status.png "calico status"
+[calico_status]: images/calico_v2_status.png "calico status"
 
-同时，已经有两个 IP Pool 创建好，分别是：10.0.0.0/26 和 192.168.0.0/16
+同时，已经有 IP Pool 创建好，是：192.168.0.0/16
 
-calicoctl pool show 截图：
+calicoctl get pool 截图：
 ![Calico pool][calico_pool]
-[calico_pool]: images/calico_pool_show.png "calico pool"
+[calico_pool]: images/calico_v2_pool_get.png "calico pool"
 
-当前集群也已经通过使用 calico driver 和 IPAM 创建了不同的 docker network，本次 demo 只需要使用 dataman
+当前集群也已经通过使用 calico driver 和 IPAM 创建了不同的 docker network，本次 demo 只需要使用 net1
 
 docker network ls 截图：
 ![Docker network][docker_network]
-[docker_network]: images/docker_network.png "docker network"
+[docker_network]: images/calico_v2_docker_network.png "docker network"
 
-calicoctl profile show 截图：
+calicoctl get profile 截图：
 ![Calico profile][calico_profile]
-[calico_profile]: images/calico_profile.png "calico profile"
+[calico_profile]: images/calico_v2_profile.png "calico profile"
 
-下面我们使用 dataman 这个网络，在两台 slave 机器上各启动一个容器：
+下面我们使用 net1 这个网络，在两台机器上各启动一个容器：
 
-数人云 下发容器的 Marathon json file:
+在 calico01 上：
 
-    {
-      "id": "/nginx-calico",
-      "cmd": null,
-      "cpus": 0.1,
-      "mem": 64,
-      "disk": 0,
-      "instances": 2,
-      "container": {
-        "type": "DOCKER",
-        "volumes": [],
-        "docker": {
-          "image": "nginx",
-          "network": "HOST",
-          "privileged": false,
-          "parameters": [
-            {
-              "key": "net",
-              "value": "dataman"
-            }
-          ],
-          "forcePullImage": false
-        }
-      },
-      "portDefinitions": [
-        {
-          "port": 10000,
-          "protocol": "tcp",
-          "labels": {}
-        }
-      ]
-    }
+    docker run --net net1 --name workload-A -tid busybox
 
-两台 slave 容器 IP 截图：
-![slave ip 1][slave_ip_1]
-[slave_ip_1]: images/ip_slave_1.png "ip slave 1"
-![slave ip 2][slave_ip_2]
-[slave_ip_2]: images/ip_slave_2.png "ip slave 2"
+在 calico02 上：
 
-从上图可以看出，两个 slave 上的容器 IP 分别是：slave 10.0.0.48, slave2 192.168.115.193
+    docker run --net net1 --name workload-B -tid busybox
 
-Slave 容器连通性测试截图：
+容器连通性测试截图：
 
 ![ip connect 1][ip_connect_1]
-[ip_connect_1]: images/ip_connect_1.png "ip connect 1"
+[ip_connect_1]: images/calico_v2_ip_connect_1.png "ip connect 1"
 ![ip connect 2][ip_connect_2]
-[ip_connect_2]: images/ip_connect_2.png "ip connect 2"
+[ip_connect_2]: images/calico_v2_ip_connect_2.png "ip connect 2"
 
-### IP 路由实现 
+
+### Demo 2: MacVlan 二层互联
+
+创建 MacVlan 网络，分别在两台主机上使用相同命令
+
+    docker network create -d macvlan --subnet=192.168.1.0/24 --gateway=192.168.1.1 -o parent=enp0s3 -o macvlan_mode=bridge 192_1
+
+创建容器：
+
+10.1.1.105:
+
+    docker run --net=192_1 --ip=192.168.1.168 -id --name test01 busybox sh
+
+10.1.1.106:
+
+    docker run --net=192_1 --ip=192.168.1.188 -id --name test11 busybox sh
+
+测试网络连通性：
+
+    docker exec test01 ping -c 4 192.168.1.188
+
+![macvlan connect][macvlan_connect]
+[macvlan_connect]: images/macvlan_connect.png "macvlan connect"
+
+### Calico IP 路由实现及 Wireshark 抓包
 
 ![Calico data plane 1][calico_data_plane_1]
 [calico_data_plane_1]: images/calico_data_plane_1.png "calico data plane 1"
@@ -204,27 +201,31 @@ Slave 容器连通性测试截图：
 
 两台 slave route 截图：
 ![slave route 1][slave_route_1]
-[slave_route_1]: images/route_slave_1.png "route slave 1"
+[slave_route_1]: images/calico_v2_route_slave_1.png "route slave 1"
 ![slave route 2][slave_route_2]
-[slave_route_2]: images/route_slave_2.png "route slave 2"
+[slave_route_2]: images/calico_v2_route_slave_2.png "route slave 2"
 
-对照两台 slave 的路由表，我们就知道，如果 slave 1 上的容器(10.0.0.48)想要发送数据到 slave 2 上的容器(192.168.115.193)，
-那它就会 match 到最后一条路由规则，将数据包转发给 slave 2(192.168.99.103)，那整个数据流就是：
+对照两台主机的路由表，我们就知道，如果主机 1 上的容器想要发送数据到主机 2 上的容器，
+那它就会 match 到响应的路由规则，将数据包转发给主机 2，那整个数据流就是：
 
-    container -> kernel -> (cali2f0e)slave 1 -> one or more hops -> (192.168.99.103)slave 2 -> kernel -> (cali7d73)container
+    container -> calico01 -> one or more hops ->  calico02 -> container
 
-这样，跨主机的容期间通信就建立起来了，而且整个数据流中没有 NAT、隧道，不涉及封包。
+最后，让我们来看看 Wireshark 抓包的截图对比：
 
+Calico：
+![wireshark calico][wireshark_calico]
+[wireshark_calico]: images/calico_v2_ws.png "wireshark calico"
+![wireshark calico container][wireshark_calico_container]
+[wireshark_calico_container]: images/calico_v2_ws_container.png "wireshark calico container"
 
-### 安全策略 ACL
+MacVlan：
+![wireshark macvlan][wireshark_macvlan]
+[wireshark_macvlan]: images/macvlan_ws.png "wireshark macvlan"
 
-![Calico data plane 2][calico_data_plane_2]
-[calico_data_plane_2]: images/calico_data_plane_2.png "calico data plane 2"
+从上图对比中也能看出，不同于 MacVlan，Calico 网络中容器的通信是没有额外的 ARP 广播的，容器的数据包在节点之间使用的节点的 MAC 地址，这也是 Calico 作为三层方案的特点之一。
+这同时也说明了，节点之间网络部分如果想对于容器间通信在二层做 filter 或者控制在 Calico 方案中是不起作用的。
 
-Calico 的 ACLs Profile 主要依靠 iptables 和 ipset 来完成，提供的是可针对每个容器级别的规则定义。
-
-具体的实现我们可以通过 iptables 命令查看对应的 chain 和 filter 规则, 这里我们就不展开讨论了。
-
+这样，跨主机的 Calico 容期间三层通信就 Demo 完了，其他的 Calico 特性这里就一一介绍了，鼓励大家可以自己使用 VMs 搭起来亲自试试。
 
 # Calico 使用场景
 
@@ -251,7 +252,6 @@ Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kuber
 
 ### 对容器间通信二层数据包有分析和控制需求
 
-
 # 总结
 
 随着容器网络的发展，各家会越来越多的关注"落地"，相信后面各家都是在易用性、易维护性上继续努力，同时也一定会加大对各个容器编排方案的支持上。
@@ -263,7 +263,7 @@ Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kuber
 
 2016年很快结束了，作为容器网络的爱好者，个人希望在 2017 年看到真正成熟稳定的落地容器网络方案。
 
-能力有限，全文中如有错误，随时欢迎指正。谢谢！
+能力所限，全文中难免有错误，随时欢迎指正。谢谢！
 
 
 [1]: https://www.projectcalico.org/celebrating-two-milestone-releases/ "Calico v2.0 Beta"
