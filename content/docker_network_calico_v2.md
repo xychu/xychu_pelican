@@ -10,7 +10,7 @@ Summary: docker networking calico vs macvlan
 # 摘要
 
 距离上次分享 Calico 已经过去快半年的时间了，Calico v2.0 也马上就要发布了，这次跟大家一起感受下新版，
-简单总结下作为使用者我看到的 Calico 的变化，包括组件，文档和 `calicoctl` ，还有会和 MacVlan 做一下对比说明原理，最后总结下适合 Calico 的使用场景。
+简单总结下作为使用者我看到的 Calico 的变化，包括组件，文档和 `calicoctl` ，还有会和 MacVLAN 做一下对比说明原理，最后总结下适合 Calico 的使用场景。
 
 # Calico 简介回顾
 
@@ -117,17 +117,17 @@ Calico 在对 Docker 家的 CNM 和 libnetwork 提供更好的支持的同时，
 
 # Calico 组件原理 Demo
 
-为了理解 Calico 工作原理，顺便体验新版 Calico，我们准备了两套 Demo 环境，一套是新版 Calico，另一套是对比环境 MacVlan。
+为了理解 Calico 工作原理，顺便体验新版 Calico，我们准备了两套 Demo 环境，一套是新版 Calico，另一套是对比环境 MacVLAN。
 
 Calico 以测试为目的集群搭建，步骤很简单，这里不展开了，
 大家可以直接参考 http://docs.projectcalico.org/master/getting-started/docker/installation/manual
 
 MacVlan 的集群搭建，步骤也相对简单,
-参考：https://github.com/alfredhuang211/study-docker-doc/blob/master/docker%E8%B7%A8%E4%B8%BB%E6%9C%BAmacvlan%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.md
+参考：https://github.com/alfredhuang211/study-docker-doc/blob/master/docker%E8%B7%A8%E4%B8%BB%E6%9C%BAmacVLAN%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.md
 
 这里默认已经有了两套 Docker Demo 集群：
 - Calico 网络的集群，分别是：10.1.1.103(calico01) 和 10.1.1.104(calico02)
-- MacVlan 集群，分别是：10.1.1.105 和 10.1.1.106
+- MacVLAN 集群，分别是：10.1.1.105 和 10.1.1.106
 
 ### Demo 1: Calico 三层互联
 
@@ -169,9 +169,9 @@ calicoctl get profile 截图：
 [ip_connect_2]: images/calico_v2_ip_connect_2.png "ip connect 2"
 
 
-### Demo 2: MacVlan 二层互联
+### Demo 2: MacVLAN 二层互联
 
-创建 MacVlan 网络，分别在两台主机上使用相同命令
+创建 MacVLAN 网络，分别在两台主机上使用相同命令
 
     docker network create -d macvlan --subnet=192.168.1.0/24 --gateway=192.168.1.1 -o parent=enp0s3 -o macvlan_mode=bridge 192_1
 
@@ -218,11 +218,11 @@ Calico：
 ![wireshark calico container][wireshark_calico_container]
 [wireshark_calico_container]: images/calico_v2_ws_container.png "wireshark calico container"
 
-MacVlan：
+MacVLAN：
 ![wireshark macvlan][wireshark_macvlan]
 [wireshark_macvlan]: images/macvlan_ws.png "wireshark macvlan"
 
-从上图对比中也能看出，不同于 MacVlan，Calico 网络中容器的通信是没有额外的 ARP 广播的，容器的数据包在节点之间使用的节点的 MAC 地址，这也是 Calico 作为三层方案的特点之一。
+从上图对比中也能看出，不同于 MacVLAN，Calico 网络中容器的通信是没有额外的 ARP 广播的，容器的数据包在节点之间使用的节点的 MAC 地址，这也是 Calico 作为三层方案的特点之一。
 这同时也说明了，节点之间网络部分如果想对于容器间通信在二层做 filter 或者控制在 Calico 方案中是不起作用的。
 
 这样，跨主机的 Calico 容期间三层通信就 Demo 完了，其他的 Calico 特性这里就一一介绍了，鼓励大家可以自己使用 VMs 搭起来亲自试试。
