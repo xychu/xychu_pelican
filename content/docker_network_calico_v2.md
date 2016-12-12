@@ -48,14 +48,6 @@ Calico 节点组网可以直接利用数据中心的网络结构（支持 L2 或
 更详细的介绍大家可以参考之前的分享：http://edgedef.com/docker-networking.html 或者 http://dockone.io/article/1489
 
 
-# Calico CNI 及 Canal
-
-Container Network Interface [CNI](https://github.com/containernetworking/cni) 容器网络 spec 是由 CoreOS 提出的，被 Mesos， Kubernetes 以及 rkt 等接受引入
-使用。
-
-Calico 在对 Docker 家的 CNM 和 libnetwork 提供更好的支持的同时，为了更亲和 Kubernetes 和 Mesos 等容器管理平台，也在积极的努力，所以不但有对 CNI 的支持，而且还和 CoreOS 一起组建了
-新的公司 TiGERA（https://www.tigera.io/），主推 [Canal](https://github.com/tigera/canal) 将 Calico 的 policy 功能加入到 [Flannel](https://github.com/coreos/flannel) 的网络中，为和 k8s 的网络提供更好的 ACL 控制。
-
 # Calico 的新版变化
 
 接下来简单介绍下 Calico 新版带来了哪些变化[1]:
@@ -114,6 +106,14 @@ v1.5.0
 资源模型一样通过 YAML 文件来定义 Calico 中的 Pool，Policy 这些模型了，同时也支持 label&selector 模式，保证了使用上的一致性。
 具体的 Calico 定义资源模型的例子在后面的 Demo 中会有体现。
 
+
+### Calico CNI 及 Canal
+
+Container Network Interface [CNI](https://github.com/containernetworking/cni) 容器网络 spec 是由 CoreOS 提出的，被 Mesos， Kubernetes 以及 rkt 等接受引入
+使用。
+
+Calico 在对 Docker 家的 CNM 和 libnetwork 提供更好的支持的同时，为了更亲和 Kubernetes 和 Mesos 等容器管理平台，也在积极的努力，所以不但有对 CNI 的支持，而且还和 CoreOS 一起组建了
+新的公司 TiGERA（https://www.tigera.io/），主推 [Canal](https://github.com/tigera/canal) 将 Calico 的 policy 功能加入到 [Flannel](https://github.com/coreos/flannel) 的网络中，为和 k8s 的网络提供更好的 ACL 控制。
 
 # Calico 组件原理 Demo
 
@@ -229,41 +229,42 @@ MacVlan：
 
 # Calico 使用场景
 
-http://contiv.github.io
-
-Contiv 是 Cisco 开源出来的针对容器的基础架构，主要功能是提供基于 Policy 的网络和存储管理，是面向微服务的一种新基架。
-
-Contiv 能够和主流的容器编排系统整合，包括：Docker Swarm, Kubernetes, Mesos and Nomad。
-
-![Contiv net][contiv_net]
-[contiv_net]: images/contiv_net.png "contiv net"
-
-如上图所示，Contiv 比较“诱人”的一点就是，它的网络管理能力，既有L2(vlan)、L3(BGP), 又有 Overlay(VxLAN), 
-而且还能对接 Cisco 自家的 SDN 产品 ACI。可以说有了它就可以无视底层的网络基础架构，向上层容器提供一致的虚拟网络了。
+Calico 既可以用在公有云，也可以部署在私有环境，我们接下来主要集中讨论下 Calico 在私有云中的使用场景[2]。
 
 ### 二层网络
 
-- 多租户网络混部在同一台主机上
-- 集成现有 SDN 方案
-- 能够和非容器环境兼容协作，不依赖物理网络具体细节
-- 即时生效的容器网络 policy/ACL/QoS 规则
+Calico 适用于二层网络，原因首先就是不会因为容器数量的变化带来 ARP 广播风暴，上面的 Demo 中，我们已经看出了，Calico 中容器间的相关通信在二层使用的是节点的 MAC 地址，
+这样也就是说，广播上的增长只是主机层上的增减，这在数据中心本来就是可控的；其次，就是网络扰动，同样的道理，使用 Calico 也不用担心因为容器的频繁启动停止所带来的网络扰动；
+最后，Calico 的 IP 空间使用是相对自由的，这样保证足够的 IP 资源使用。
+
+当然，任何事情都是两面，使用 Calico 要理解，Calico 的 IP 是集群内，也就是说如果需要使用容器 IP 和 外部互联网进行通讯，还需要进行相应的配置。
+比如：如果有对外通讯需求，则要开启 nat-outgoing；如果需要对内可达，需要配置和维护对应的路由规则等。
+
+此外，上面的 Demo 也说明了，如果有需求对容器间通信二层数据包有分析和控制的化，Calico 也是没办法的，这样也就是说如果 DC 已经集成了一些网络控制模块或者 SDN，则要通盘考虑，
+是否合适引入 Calico。
+
+最后，提一个小点，Calico 的数据存储，需要使用 hostname 作为主机的唯一标志，这要求初始化 Calico 集群之前，需要规划主机的 hostname。
+
 
 ### 三层网络
 
-### 对容器间通信二层数据包有分析和控制需求
+Calico 也能使用在三层的网络中，但是相比二层是要复杂，需要更多的 net-eng 介入，个人水平有限，就不展开说了，有兴趣的可以直接参考：
+http://docs.projectcalico.org/master/reference/private-cloud/l3-interconnect-fabric
+
 
 # 总结
 
-随着容器网络的发展，各家会越来越多的关注"落地"，相信后面各家都是在易用性、易维护性上继续努力，同时也一定会加大对各个容器编排方案的支持上。
+随着容器网络的发展，各家会越来越多的关注"落地"，相信后面各个方案都会在易用性、易维护性上继续提升，同时也一定会加强对各个容器编排方案的支持。
 回过头看 Calico 的新版本发展，也印证了这些要求：
 
 - 易用性，兼容 k8s 的 calicoctl UX；
-- 易维护性，Calico 本身为三层方案，而且Calico 能够兼容二层和三层的网络设计，可以和现有 DC 网络的整合和维护；
+- 易维护性，Golang 重写；Calico 本身为三层方案，而且Calico 能够兼容二层和三层的网络设计，可以和现有 DC 网络的整合和维护；
 - 更好的和现有方案的集成，包括 OpenStack，CNI／Canal，Mesos 等，Calico 在网络方案的适用性方案还是很有竞争力的；
 
-2016年很快结束了，作为容器网络的爱好者，个人希望在 2017 年看到真正成熟稳定的落地容器网络方案。
+2016年很快结束了，作为容器网络的爱好者，个人希望在 2017 年看到真正成熟稳定的容器网络方案。
 
-能力所限，全文中难免有错误，随时欢迎指正。谢谢！
+能力所限，文中难免有错误，随时欢迎指正。谢谢！
 
 
 [1]: https://www.projectcalico.org/celebrating-two-milestone-releases/ "Calico v2.0 Beta"
+[2]: http://docs.projectcalico.org/master/reference/private-cloud/l2-interconnect-fabric "L2 Calico"
