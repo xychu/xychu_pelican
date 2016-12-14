@@ -9,8 +9,9 @@ Summary: docker networking calico vs macvlan
 
 # 摘要
 
-距离上次聊 Calico 已经过去快半年的时间了，数人云也一直在努力将容器网络方案应用到企业客户的环境中，Calico v2.0 也马上就要发布了，这次跟大家一起感受下新版，
-需要说明下，本人跟 Calico 没有任何关系，也只是个"吃瓜群众"，做为使用者，想跟大家聊聊心得而已。
+距离上次聊 Calico 已经过去快半年的时间了，数人云也一直在努力将容器网络方案应用到企业客户的环境中，Calico v2.0 也马上就要发布了，这次跟大家一起感受下新版.
+
+需要说明下，本人跟 Calico 没有任何直接关系，也只是个"吃瓜群众"，做为使用者，想跟大家聊聊心得而已。
 
 这次分享的内容主要包括：
 
@@ -98,7 +99,7 @@ v1.5.0
 
 总结来看，就是组件语言栈转向 Golang，包括原来 Python 的 `calicoctl` 也用 Golang 重写了；
 顺便说一下，这也和数人云的语言栈从 Python + Golang 统一到 Golang 是差不多的周期，可以看出 Golang 在容器圈的影响力之大；
-同时面向开发技术，给使用者提供更好的扩展性（兼容 GoBGP）和集成能力（OpenStack/Neutron）。
+同时面向开源，给使用者提供更好的扩展性（兼容 GoBGP）和集成能力（OpenStack/Neutron）。
 
 ### 使用层面
 
@@ -216,8 +217,11 @@ calicoctl get profile 截图：
 ![slave route 2][slave_route_2]
 [slave_route_2]: images/calico_v2_route_slave_2.png "route slave 2"
 
-对照两台主机的路由表，我们就知道，如果主机 1 上的容器想要发送数据到主机 2 上的容器，
-那它就会 match 到响应的路由规则，将数据包转发给主机 2，那整个数据流就是：
+对照两台主机的路由表，我们就知道，如果主机 1 上的容器（192.168.147.195）想要发送数据到主机 2 上的容器（192.168.38.195），
+那它就会 match 到响应的路由规则 `192.168.38.192/26 via 10.1.1.104`，将数据包转发给主机 2，主机 2 在根据 `192.168.38.195 dev cali2f648c3dc3f`
+把数据包发到对应的 veth pair 上，交给 kernel。
+
+那整个数据流就是：
 
     container -> calico01 -> one or more hops ->  calico02 -> container
 
@@ -233,8 +237,9 @@ MacVLAN：
 ![wireshark macvlan][wireshark_macvlan]
 [wireshark_macvlan]: images/macvlan_ws.png "wireshark macvlan"
 
-从上图对比中也能看出，不同于 MacVLAN，Calico 网络中容器的通信是没有额外的 ARP 广播的，容器的数据包在节点之间使用的节点的 MAC 地址，这也是 Calico 作为三层方案的特点之一。
-这同时也说明了，节点之间网络部分如果想对于容器间通信在二层做 filter 或者控制在 Calico 方案中是不起作用的。
+从上图对比中也能看出，不同于 MacVLAN，Calico 网络中容器的通信的数据包在节点之间使用节点的 MAC 地址，这样没有额外的 ARP 广播的，这是 Calico 作为三层方案的特点之一。
+
+但这同时也表明了，节点之间网络部分如果想对于容器间通信在二层做 filter 或者控制在 Calico 方案中是不起作用的。
 
 这样，一个简单的跨主机的 Calico 容期间三层通信就 Demo 完了，其他的 Calico 特性这里就一一介绍了，鼓励大家可以自己使用 VMs 搭起来亲自试试，遇到问题随时到 Slack 去聊聊。
 
