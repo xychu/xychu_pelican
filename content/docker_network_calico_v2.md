@@ -9,10 +9,18 @@ Summary: docker networking calico vs macvlan
 
 # 摘要
 
-距离上次分享 Calico 已经过去快半年的时间了，Calico v2.0 也马上就要发布了，这次跟大家一起感受下新版，
-简单总结下作为使用者我看到的 Calico 的变化，包括组件，文档和 `calicoctl` ，还有会和 MacVLAN 做一下对比说明原理，最后总结下适合 Calico 的使用场景。
+距离上次聊 Calico 已经过去快半年的时间了，数人云也一直在努力将容器网络方案应用到企业客户的环境中，Calico v2.0 也马上就要发布了，这次跟大家一起感受下新版，
+需要说明下，本人跟 Calico 没有任何关系，也只是个"吃瓜群众"，做为使用者，想跟大家聊聊心得而已。
+
+这次分享的内容主要包括：
+
+- 简单总结下作为使用者我看到的 Calico 的变化，包括组件，文档和 `calicoctl` ；
+- Demo 一些简单的例子，会和 MacVLAN 做一下对比说明原理；
+- 最后总结下适合 Calico 的使用场景；
 
 # Calico 简介回顾
+
+首先，还是简单的回顾下 Calico 的架构和关键组件，方便大家理解。
 
 ### Calico 架构
 
@@ -88,7 +96,9 @@ v1.5.0
 - libnetwork-plugin (Docker libnetwork plugin for Project Calico, integrated with the `calico/node` image)
 - networking-calico （OpenStack/Neutron integration for Calico networking）
 
-总结来看，就是组件语言栈转向 Golang，包括原来 Python 的 `calicoctl` 也用 Golang 重写了；同时面向使用者提供更好的扩展性和集成能力。
+总结来看，就是组件语言栈转向 Golang，包括原来 Python 的 `calicoctl` 也用 Golang 重写了；
+顺便说一下，这也和数人云的语言栈从 Python + Golang 统一到 Golang 是差不多的周期，可以看出 Golang 在容器圈的影响力之大；
+同时面向开发技术，给使用者提供更好的扩展性（兼容 GoBGP）和集成能力（OpenStack/Neutron）。
 
 ### 使用层面
 
@@ -106,13 +116,14 @@ v1.5.0
 资源模型一样通过 YAML 文件来定义 Calico 中的 Pool，Policy 这些模型了，同时也支持 label&selector 模式，保证了使用上的一致性。
 具体的 Calico 定义资源模型的例子在后面的 Demo 中会有体现。
 
-
 ### Calico CNI 及 Canal
+
+还有一个变化，就是 [Canal](https://github.com/tigera/canal) 的出现，面向 CNI 的基于访问控制的容器网络方案。
 
 Container Network Interface [CNI](https://github.com/containernetworking/cni) 容器网络 spec 是由 CoreOS 提出的，被 Mesos， Kubernetes 以及 rkt 等接受引入
 使用。
 
-Calico 在对 Docker 家的 CNM 和 libnetwork 提供更好的支持的同时，为了更亲和 Kubernetes 和 Mesos 等容器管理平台，也在积极的努力，所以不但有对 CNI 的支持，而且还和 CoreOS 一起组建了
+Calico 在对 Docker 家的 CNM 和 libnetwork 提供更好的支持的同时，为了更亲和 Kubernetes ，和更好的对 CNI 的支持，Metaswitch 和 CoreOS 一起组建了
 新的公司 TiGERA（https://www.tigera.io/），主推 [Canal](https://github.com/tigera/canal) 将 Calico 的 policy 功能加入到 [Flannel](https://github.com/coreos/flannel) 的网络中，为和 k8s 的网络提供更好的 ACL 控制。
 
 # Calico 组件原理 Demo
@@ -225,7 +236,7 @@ MacVLAN：
 从上图对比中也能看出，不同于 MacVLAN，Calico 网络中容器的通信是没有额外的 ARP 广播的，容器的数据包在节点之间使用的节点的 MAC 地址，这也是 Calico 作为三层方案的特点之一。
 这同时也说明了，节点之间网络部分如果想对于容器间通信在二层做 filter 或者控制在 Calico 方案中是不起作用的。
 
-这样，跨主机的 Calico 容期间三层通信就 Demo 完了，其他的 Calico 特性这里就一一介绍了，鼓励大家可以自己使用 VMs 搭起来亲自试试。
+这样，一个简单的跨主机的 Calico 容期间三层通信就 Demo 完了，其他的 Calico 特性这里就一一介绍了，鼓励大家可以自己使用 VMs 搭起来亲自试试，遇到问题随时到 Slack 去聊聊。
 
 # Calico 使用场景
 
@@ -238,12 +249,13 @@ Calico 适用于二层网络，原因首先就是不会因为容器数量的变�
 最后，Calico 的 IP 空间使用是相对自由的，这样保证足够的 IP 资源使用。
 
 当然，任何事情都是两面，使用 Calico 要理解，Calico 的 IP 是集群内，也就是说如果需要使用容器 IP 和 外部互联网进行通讯，还需要进行相应的配置。
-比如：如果有对外通讯需求，则要开启 nat-outgoing；如果需要对内可达，需要配置和维护对应的路由规则等。
+比如：如果有对外通讯需求，则要开启 nat-outgoing；如果需要对内可达，需要配置和维护对应的路由规则或者通过支持 BGP 的外部交换／路由设备，具体可以参考[3]。
 
-此外，上面的 Demo 也说明了，如果有需求对容器间通信二层数据包有分析和控制的化，Calico 也是没办法的，这样也就是说如果 DC 已经集成了一些网络控制模块或者 SDN，则要通盘考虑，
+此外，上面的 Demo 也说明了，如果有需求对容器间通信二层数据包有分析和控制的化，Calico 也是没办法的，这样也就是说如果 DC 已经集成了一些商业网络控制模块或者 SDN，则要通盘考虑，
 是否合适引入 Calico。
 
-最后，提一个小点，Calico 的数据存储，需要使用 hostname 作为主机的唯一标志，这要求初始化 Calico 集群之前，需要规划主机的 hostname。
+最后，提一个小点，Calico 的数据存储，需要对每个 calico node 指定唯一标示，默认需要使用 hostname ，也可以在 `calicoctl node run` 时通过 `--name` 指定，
+如果使用默认的 `hostname`，就要求在初始化 Calico 集群之前，规划好各个主机的 hostname。
 
 
 ### 三层网络
@@ -254,17 +266,20 @@ http://docs.projectcalico.org/master/reference/private-cloud/l3-interconnect-fab
 
 # 总结
 
-随着容器网络的发展，各家会越来越多的关注"落地"，相信后面各个方案都会在易用性、易维护性上继续提升，同时也一定会加强对各个容器编排方案的支持。
+随着容器网络的发展，数人云会越来越多的关注如何把先进的容器网络技术更好的"落地"企业，我们会一直关注开源，包括 Calico, Cisco Contiv, DPDK等，
+相信后面各个开源方案都会在易用性、易维护性上继续提升，同时也一定会加强对各个容器编排方案的支持。
+
 回过头看 Calico 的新版本发展，也印证了这些要求：
 
 - 易用性，兼容 k8s 的 calicoctl UX；
 - 易维护性，Golang 重写；Calico 本身为三层方案，而且Calico 能够兼容二层和三层的网络设计，可以和现有 DC 网络的整合和维护；
 - 更好的和现有方案的集成，包括 OpenStack，CNI／Canal，Mesos 等，Calico 在网络方案的适用性方案还是很有竞争力的；
 
-2016年很快结束了，作为容器网络的爱好者，个人希望在 2017 年看到真正成熟稳定的容器网络方案。
+2016年马上就要过去了，作为容器网络的爱好者使用者，个人希望在 2017 年数人云能将真正成熟稳定的容器网络方案带给大家。
 
 能力所限，文中难免有错误，随时欢迎指正。谢谢！
 
 
 [1]: https://www.projectcalico.org/celebrating-two-milestone-releases/ "Calico v2.0 Beta"
 [2]: http://docs.projectcalico.org/master/reference/private-cloud/l2-interconnect-fabric "L2 Calico"
+[3]: http://docs.projectcalico.org/master/usage/external-connectivity "External connectivity"
