@@ -66,6 +66,7 @@ Calico 节点组网可以直接利用数据中心的网络结构（支持 L2 或
 先看一下 v2.0.0-rc2 中包含的组件列表:
 
 v2.0.0-rc2
+
 - felix	2.0.0-rc4
 - calicoctl	v1.0.0-rc2
 - calico/node	v1.0.0-rc2
@@ -81,6 +82,7 @@ v2.0.0-rc2
 对比下 v1.5 或者之前的版本：
 
 v1.5.0
+
 - felix	v1.4.1b2
 - calicoctl	v0.22.0
 - calico/node	v0.22.0
@@ -138,6 +140,7 @@ MacVlan 的集群搭建，步骤也相对简单,
 参考：https://github.com/alfredhuang211/study-docker-doc/blob/master/docker%E8%B7%A8%E4%B8%BB%E6%9C%BAmacVLAN%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE.md
 
 这里默认已经有了两套 Docker Demo 集群：
+
 - Calico 网络的集群，分别是：10.1.1.103(calico01) 和 10.1.1.104(calico02)
 - MacVLAN 集群，分别是：10.1.1.105 和 10.1.1.106
 
