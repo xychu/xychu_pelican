@@ -1,4 +1,4 @@
-Title: Alluxio 小调 
+Title: Alluxio 小调
 Date: 2017-08-17
 Category: bigdata
 Tags: alluxio, hadoop, spark
