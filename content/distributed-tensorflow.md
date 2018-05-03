@@ -200,10 +200,10 @@ __注：__ 可以通过脚本或者借助调度框架来设置 `TF_CONFIG` 。
 
 引入 Ring Allreduce 之后的拓扑变化如下：
 
-<p style="width: 1000px;">
-<img src="./images/dist-tf/ps_worker_top.jpg" alt="ps_worker_top" style="width: 450px;"/>
+<p>
+<img src="./images/dist-tf/ps_worker_top.jpg" alt="ps_worker_top" style="width: 300px;"/>
 &rarr;
-<img src="./images/dist-tf/ring_top.jpg" alt="ring_top" style="width: 450px;"/>
+<img src="./images/dist-tf/ring_top.jpg" alt="ring_top" style="width: 300px;"/>
 </p>
 
 ### 参数更新步骤
